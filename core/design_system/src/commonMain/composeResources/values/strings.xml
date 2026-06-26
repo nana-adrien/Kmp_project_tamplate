@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Network errors -->
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_request_timeout">Request timed out</string>
+    <string name="error_unauthorized">Session expired, please log in again</string>
+    <string name="error_forbidden">Access denied</string>
+    <string name="error_not_found">Resource not found</string>
+    <string name="error_bad_request">Invalid request</string>
+    <string name="error_too_many_requests">Too many requests, please wait</string>
+    <string name="error_server">Server error, please try again</string>
+    <string name="error_server_unavailable">Service unavailable</string>
+    <string name="error_payload_too_large">Data too large</string>
+    <string name="error_serialization">Data format error</string>
+    <string name="error_unknown">An unexpected error occurred</string>
+
+    <!-- Local errors -->
+    <string name="error_disk_full">Not enough storage space</string>
+    <string name="error_local_not_found">Data not found locally</string>
+
+    <!-- Common UI -->
+    <string name="btn_retry">Retry</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_close">Close</string>
+    <string name="btn_ok">OK</string>
+    <string name="label_loading">Loading…</string>
+    <string name="label_empty">No data available</string>
+    <string name="label_error">Something went wrong</string>
+    <string name="cd_show_password">Show password</string>
+    <string name="cd_hide_password">Hide password</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_menu">Menu</string>
+</resources>
