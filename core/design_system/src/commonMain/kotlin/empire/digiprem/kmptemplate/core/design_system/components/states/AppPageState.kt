@@ -14,15 +14,16 @@ sealed class AppErrorLevel {
 
 @Stable
 class AppPageState {
-    var isLoading by mutableStateOf(false)
-        private set
-    var error: AppErrorLevel? by mutableStateOf(null)
-        private set
+    private val _isLoading = mutableStateOf(false)
+    private val _error = mutableStateOf<AppErrorLevel?>(null)
 
-    fun setLoading(loading: Boolean) { isLoading = loading }
-    fun setError(level: AppErrorLevel) { error = level; isLoading = false }
-    fun clearError() { error = null }
-    fun setReady() { isLoading = false; error = null }
+    val isLoading: Boolean get() = _isLoading.value
+    val error: AppErrorLevel? get() = _error.value
+
+    fun setLoading(loading: Boolean) { _isLoading.value = loading }
+    fun setError(level: AppErrorLevel) { _error.value = level; _isLoading.value = false }
+    fun clearError() { _error.value = null }
+    fun setReady() { _isLoading.value = false; _error.value = null }
 }
 
 @Composable

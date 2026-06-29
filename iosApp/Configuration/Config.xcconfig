@@ -1,0 +1,7 @@
+TEAM_ID=
+
+PRODUCT_NAME=Kmp_project_tamplate
+PRODUCT_BUNDLE_IDENTIFIER=empire.digiprem.kmp_project_tamplate.Kmp_project_tamplate$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0

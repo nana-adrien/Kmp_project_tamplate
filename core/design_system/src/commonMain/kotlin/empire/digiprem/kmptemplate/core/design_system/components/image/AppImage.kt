@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +44,8 @@ fun AppImage(
             modifier           = modifier,
             contentScale       = contentScale,
         ) {
-            when (painter.state) {
+            val state by painter.state.collectAsState()
+            when (state) {
                 is AsyncImagePainter.State.Loading -> ShimmerPlaceholder(modifier = Modifier.fillMaxSize())
                 is AsyncImagePainter.State.Error   -> Box(
                     modifier        = Modifier.fillMaxSize(),

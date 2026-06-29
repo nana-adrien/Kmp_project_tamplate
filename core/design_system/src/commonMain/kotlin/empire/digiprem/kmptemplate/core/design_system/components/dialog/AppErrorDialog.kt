@@ -1,7 +1,7 @@
 package empire.digiprem.kmptemplate.core.design_system.components.dialog
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +25,7 @@ fun AppErrorDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier         = modifier,
-        icon   = { Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+        icon   = { Icon(imageVector = Icons.Default.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title  = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
         text   = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
