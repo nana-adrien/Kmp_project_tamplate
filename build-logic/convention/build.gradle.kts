@@ -9,6 +9,7 @@ group = "empire.digiprem.kmptemplate.buildlogic"
 dependencies {
     implementation(libs.room.gradlePlugin)
     implementation(libs.buildkonfig.gradlePlugin)
+    implementation(libs.buildkonfig.compilerCore)
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.android.kotlin.multiplatform.library.gradelPlugin)
     compileOnly(libs.android.tools.common)
