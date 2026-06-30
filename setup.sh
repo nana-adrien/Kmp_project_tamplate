@@ -63,6 +63,9 @@ BACKEND_CHOICE="${BACKEND_CHOICE:-1}"
 BACKEND_TYPE="ktor"
 SUPABASE_URL=""
 SUPABASE_KEY=""
+SUPABASE_URL_DEV=""
+SUPABASE_KEY_DEV=""
+SETUP_SUPABASE_DB="false"
 SERVER_DB_URL=""
 SERVER_DB_USER="postgres"
 SERVER_DB_PASSWORD=""
@@ -80,6 +83,13 @@ elif [[ "$BACKEND_CHOICE" == "3" ]]; then
     BACKEND_TYPE="supabase"
     SUPABASE_URL=$(ask "Supabase project URL" "https://xyzxyz.supabase.co")
     SUPABASE_KEY=$(ask "Supabase Anon Key")
+    echo ""
+    if ask_yn "Inclure la configuration BD Supabase (migrations SQL + Supabase CLI) ?" "y"; then
+        SETUP_SUPABASE_DB="true"
+        echo -e "${YELLOW}  ▸ URLs pour debug/release (stockées dans local.properties)${NC}"
+        SUPABASE_URL_DEV=$(ask "URL Supabase locale debug (Supabase CLI)" "http://127.0.0.1:54321")
+        SUPABASE_KEY_DEV=$(ask "Anon key locale debug (depuis: supabase status)")
+    fi
 fi
 
 # ── 4. Push notifications ─────────────────────────────────────────────────────
@@ -167,6 +177,17 @@ sed -i '' \
 # 6e. Make helper scripts executable
 chmod +x create-feature.sh
 
+# 6f. Supabase BD config
+if [[ "$SETUP_SUPABASE_DB" == "true" ]]; then
+    cat > local.properties <<EOF
+SUPABASE_URL_DEV=${SUPABASE_URL_DEV}
+SUPABASE_KEY_DEV=${SUPABASE_KEY_DEV}
+SUPABASE_URL_PROD=${SUPABASE_URL}
+SUPABASE_KEY_PROD=${SUPABASE_KEY}
+EOF
+    echo "  ✅ local.properties créé"
+fi
+
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  ✅ Setup complete!${NC}"
@@ -185,6 +206,14 @@ if [[ "$BACKEND_TYPE" == "ktor-server" ]]; then
     echo "  • Apply DB migrations to your Supabase PostgreSQL instance"
 else
     echo "  • Set BASE_URL in core/data/src/commonMain/.../networking/HttpConstants.kt"
+fi
+
+if [[ "$SETUP_SUPABASE_DB" == "true" ]]; then
+    echo "  • Installer Supabase CLI : https://supabase.com/docs/guides/cli"
+    echo "  • Démarrer Supabase local : supabase start"
+    echo "  • Appliquer les migrations : supabase db push"
+    echo "  • Peupler les données de test : supabase db seed"
+    echo "  • Récupérer les clés locales : supabase status"
 fi
 echo "  • Customize colors in core/design_system/src/.../theme/Color.kt"
 echo "  • Open the project in Android Studio and sync Gradle"

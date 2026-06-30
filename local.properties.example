@@ -1,0 +1,14 @@
+# Supabase — URLs et clés d'API
+# NE PAS committer local.properties (déjà dans .gitignore)
+# Copier ce fichier : cp local.properties.example local.properties
+
+# ── Mode debug → Supabase CLI local ──────────────────────────────────────────
+# Démarrer : supabase start
+# Récupérer les clés : supabase status
+SUPABASE_URL_DEV=http://127.0.0.1:54321
+SUPABASE_KEY_DEV=your-local-anon-key
+
+# ── Mode release → Supabase cloud (supabase.com) ─────────────────────────────
+# Projet Settings > API
+SUPABASE_URL_PROD=https://xxxxxxxxxxx.supabase.co
+SUPABASE_KEY_PROD=your-production-anon-key

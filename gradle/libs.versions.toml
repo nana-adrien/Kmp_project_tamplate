@@ -29,6 +29,7 @@ room                 = "2.7.2"
 serialization        = "1.9.0"
 sqlite               = "2.5.1"
 supabase             = "3.1.4"
+buildkonfig          = "0.17.1"
 
 # Spring Boot Server (activated if backend.type=ktor-server)
 spring-boot                  = "3.4.3"
@@ -40,6 +41,7 @@ jackson                      = "2.17.0"
 [libraries]
 # Build-logic classpath
 android-gradlePlugin                             = { module = "com.android.tools.build:gradle",                                                                           version.ref = "agp" }
+buildkonfig-gradlePlugin                         = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin",                                                     version.ref = "buildkonfig" }
 android-kotlin-multiplatform-library-gradelPlugin = { module = "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin",         version.ref = "agp" }
 android-tools-common                             = { module = "com.android.tools:common",                                                                                 version.ref = "androidTools" }
 kotlin-gradlePlugin                              = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin",                                                                version.ref = "kotlin" }
@@ -163,7 +165,6 @@ room                         = { id = "androidx.room",                          
 # Spring Boot plugins (used in server/ modules)
 spring-boot                  = { id = "org.springframework.boot",           version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management",    version.ref = "spring-dependency-management" }
-kotlin-jvm                   = { id = "org.jetbrains.kotlin.jvm",           version.ref = "kotlin" }
 kotlin-spring                = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlin-jpa                   = { id = "org.jetbrains.kotlin.plugin.jpa",    version.ref = "kotlin" }
 
@@ -174,3 +175,7 @@ conventionFeature       = { id = "convention.feature" }
 conventionRoom          = { id = "convention.room" }
 conventionApp           = { id = "convention.app" }
 conventionSpringService = { id = "convention.spring.service" }
+conventionBuildConfig   = { id = "convention.build.config" }
+
+# BuildKonfig (Supabase URL/key injection)
+buildkonfig             = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }

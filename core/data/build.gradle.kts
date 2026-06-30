@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.conventionKmpLibrary)
+    alias(libs.plugins.conventionBuildConfig)
 }
 
 kotlin {

@@ -8,6 +8,7 @@ group = "empire.digiprem.kmptemplate.buildlogic"
 
 dependencies {
     implementation(libs.room.gradlePlugin)
+    implementation(libs.buildkonfig.gradlePlugin)
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.android.kotlin.multiplatform.library.gradelPlugin)
     compileOnly(libs.android.tools.common)
@@ -63,6 +64,10 @@ gradlePlugin {
         register("springService") {
             id = "convention.spring.service"
             implementationClass = "SpringServicePlugin"
+        }
+        register("buildConfig") {
+            id = "convention.build.config"
+            implementationClass = "BuildConfigPlugin"
         }
     }
 }
