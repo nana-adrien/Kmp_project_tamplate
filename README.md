@@ -11,15 +11,22 @@ Template **Kotlin Multiplatform** réutilisable avec Compose Multiplatform, Clea
 
 1. [Ce que le template contient](#-ce-que-le-template-contient)
 2. [Architecture](#-architecture)
-3. [Démarrage rapide](#-démarrage-rapide)
+3. [Lancer un projet depuis le template](#-lancer-un-projet-depuis-le-template)
+   - [Prérequis](#prérequis)
+   - [Étape 1 — Cloner et initialiser](#étape-1--cloner-et-initialiser)
+   - [Étape 2 — Setup Wizard](#étape-2--lancer-le-setup-wizard)
+   - [Étape 3 — Ce que le wizard applique](#étape-3--ce-que-le-wizard-applique-automatiquement)
+   - [Mode Ktor uniquement](#mode-1--ktor-uniquement-api-externe)
+   - [Mode Spring Boot Server](#mode-2--spring-boot-server-inclus)
+   - [Mode Supabase](#mode-3--supabase-client-direct)
+   - [Étape 4 — Ouvrir dans Android Studio](#étape-4--ouvrir-dans-android-studio)
 4. [Configurer les cibles](#-configurer-les-cibles-plateforme)
-5. [Créer un nouveau projet](#-créer-un-nouveau-projet)
-6. [Ajouter une feature métier](#-ajouter-une-feature-métier)
-7. [Commandes Gradle](#-commandes-gradle)
-8. [Scénarios d'utilisation](#-scénarios-dutilisation)
-9. [Ce que tu dois personnaliser](#-ce-que-tu-dois-personnaliser-par-projet)
-10. [Stack technique](#-stack-technique)
-11. [Structure du projet](#-structure-du-projet)
+5. [Ajouter une feature métier](#-ajouter-une-feature-métier)
+6. [Commandes Gradle](#-commandes-gradle)
+7. [Scénarios d'utilisation](#-scénarios-dutilisation)
+8. [Ce que tu dois personnaliser](#-ce-que-tu-dois-personnaliser-par-projet)
+9. [Stack technique](#-stack-technique)
+10. [Structure du projet](#-structure-du-projet)
 
 ---
 
@@ -103,39 +110,256 @@ Events one-shot (navigation, toast) → Channel<Event> → ObservableEvent
 
 ---
 
-## 🚀 Démarrage rapide
+## 🚀 Lancer un projet depuis le template
 
 ### Prérequis
 
-- Android Studio Hedgehog ou supérieur
-- JDK 17+
-- Xcode 15+ (pour iOS)
-- Kotlin Multiplatform Mobile plugin
+| Outil | Version minimum | Obligatoire |
+|---|---|---|
+| **JDK** | 17+ | Toujours |
+| **Android Studio** | Hedgehog (2023.1.1)+ | Toujours |
+| **Plugin KMP** | Kotlin Multiplatform Mobile | Toujours |
+| **Xcode** | 15+ | Si cible iOS |
+| **Supabase CLI** | Dernière version | Si mode Supabase + config BD |
+| **Docker** | — | Requis par Supabase CLI |
 
-### Cloner et lancer
+---
+
+### Étape 1 — Cloner et initialiser
 
 ```bash
-# 1. Cloner le template
 git clone https://github.com/ton-compte/kmp-template.git MonProjet
 cd MonProjet
 
-# 2. Ouvrir dans Android Studio
-# File > Open > sélectionner le dossier MonProjet
+# Repartir d'un historique git propre
+rm -rf .git
+git init
+git add .
+git commit -m "chore: initial commit from KMP template"
+```
 
-# 3. Lancer l'app Android directement
+---
+
+### Étape 2 — Lancer le Setup Wizard
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+Le wizard pose **4 questions** interactives :
+
+#### Question 1 — App identity
+
+```
+? App name [MyApp]: MonApp
+? Package name [com.mycompany.monapp]: com.monentreprise.monapp
+? Component prefix [MonApp]: Mon
+```
+
+- **App name** → nom affiché dans Android Studio, Xcode, et l'icône de l'app
+- **Package name** → remplace `empire.digiprem.kmptemplate` dans tout le code source
+- **Component prefix** → renomme les composants UI : `AppButton` → `MonButton`, `AppImage` → `MonImage`, etc.
+
+#### Question 2 — Targets (Y/n pour chacun)
+
+```
+? Android? (Y/n): Y
+? iOS? (Y/n): Y
+? Desktop (JVM)? (Y/n): n
+? Web (WASM)? (Y/n): n
+```
+
+Les convention plugins Gradle lisent ces choix depuis `gradle.properties` et configurent automatiquement les source sets KMP. Aucune modification de code nécessaire.
+
+#### Question 3 — Backend
+
+```
+  1) Ktor only  — client calls your own external API
+  2) Ktor + Spring Boot Server — backend included in this repo (Supabase PostgreSQL)
+  3) Supabase — BaaS via supabase-kt SDK (direct client access)
+? Choice [1]:
+```
+
+Voir la section [Configuration selon le backend](#configuration-selon-le-backend) pour le détail de chaque mode.
+
+#### Question 4 — Push notifications
+
+```
+  1) Firebase FCM (Android + iOS)
+  2) APNs only (iOS)
+  3) None
+? Choice [3]:
+```
+
+---
+
+### Étape 3 — Ce que le wizard applique automatiquement
+
+| Action | Détail |
+|---|---|
+| `rename-project.sh` | Remplace package, nom d'app et préfixe composants dans tous les `.kt`, `.kts`, `.xml`, `.swift`, `.xcconfig`, `.toml` |
+| `gradle.properties` | Active les targets : `kmp.target.android`, `kmp.target.ios`, `kmp.target.desktop`, `kmp.target.web` |
+| `gradle.properties` | Définit `backend.type=ktor\|ktor-server\|supabase` |
+| `gradle.properties` | Écrit les credentials backend (URL DB, JWT secret, Supabase URL/key) |
+| `local.properties` | Créé uniquement si mode Supabase + config BD — contient les clés debug/release |
+| `create-feature.sh` | Rendu exécutable automatiquement |
+
+---
+
+### Configuration selon le backend
+
+#### Mode 1 — Ktor uniquement (API externe)
+
+C'est le mode par défaut. Le wizard ne demande rien de plus. Après le setup :
+
+```kotlin
+// core/data/src/commonMain/.../networking/HttpConstants.kt
+const val BASE_URL = "https://api.tonprojet.com/"
+```
+
+Puis :
+
+```bash
 ./gradlew :androidApp:assembleDebug
 ```
 
-L'application tourne avec des écrans de login, dashboard, profil, notifications et paramètres fonctionnels (avec des données de test).
+---
+
+#### Mode 2 — Spring Boot Server inclus
+
+Le repo contient un serveur Spring Boot complet (`/server/`) connecté à une base PostgreSQL hébergée sur Supabase cloud. Le wizard te demande :
+
+```
+? Supabase DB URL: jdbc:postgresql://db.xxxx.supabase.co:5432/postgres
+? DB user: postgres
+? DB password: ***
+? JWT secret (base64, min 32 chars): ***
+```
+
+Ces valeurs sont écrites dans `gradle.properties` (gitignored).
+
+**Lancer le serveur :**
+
+```bash
+./gradlew :server:app:bootRun
+# Démarre sur http://localhost:8080
+```
+
+**Connecter le client KMP au serveur local :**
+
+```kotlin
+// core/data/src/commonMain/.../networking/HttpConstants.kt
+const val BASE_URL = "http://10.0.2.2:8080/"   // depuis émulateur Android
+// const val BASE_URL = "http://localhost:8080/" // depuis Desktop ou Web
+```
+
+**Appliquer les migrations SQL** sur ton projet Supabase cloud (via le Dashboard Supabase ou Supabase CLI) avant le premier démarrage du serveur.
+
+---
+
+#### Mode 3 — Supabase (client direct)
+
+Le wizard demande l'URL et la clé anon de ton projet Supabase :
+
+```
+? Supabase project URL: https://xxxx.supabase.co
+? Supabase Anon Key: eyJhbGci...
+? Inclure la configuration BD Supabase (migrations SQL + Supabase CLI) ? (Y/n):
+```
+
+**Option A — Sans config BD** (connexion à un projet Supabase cloud existant) :
+
+BuildKonfig génère automatiquement `BuildConfig.SUPABASE_URL` et `BuildConfig.SUPABASE_KEY` depuis `gradle.properties`. Aucune étape supplémentaire.
+
+**Option B — Avec config BD** (migrations SQL + développement local via Supabase CLI) :
+
+Le wizard crée `local.properties` avec 4 clés (debug ↔ release switching automatique) :
+
+```properties
+# local.properties — NE PAS COMMITTER (déjà dans .gitignore)
+SUPABASE_URL_DEV=http://127.0.0.1:54321      # Supabase CLI local
+SUPABASE_KEY_DEV=<anon-key-locale>
+SUPABASE_URL_PROD=https://xxxx.supabase.co   # Supabase cloud
+SUPABASE_KEY_PROD=<anon-key-prod>
+```
+
+**Démarrer l'environnement local Supabase :**
+
+```bash
+# 1. Installer Supabase CLI (macOS)
+brew install supabase/tap/supabase
+
+# 2. Démarrer Supabase local (PostgreSQL + Auth + API — nécessite Docker)
+supabase start
+
+# 3. Récupérer la clé anon locale
+supabase status
+# → copier "anon key" dans local.properties > SUPABASE_KEY_DEV
+
+# 4. Appliquer les 4 migrations
+#    (profiles, user_settings, notifications, storage avatars)
+supabase db push
+
+# 5. Injecter les données de test
+#    (alice@test.com / bob@test.com — mot de passe: Test1234!)
+supabase db seed
+```
+
+**BuildKonfig — switching debug/release automatique :**
+
+```bash
+# Debug → utilise SUPABASE_URL_DEV + SUPABASE_KEY_DEV (Supabase CLI local)
+./gradlew :androidApp:assembleDebug
+
+# Release → utilise SUPABASE_URL_PROD + SUPABASE_KEY_PROD (Supabase cloud)
+./gradlew :androidApp:assembleRelease -Prelease
+```
+
+---
+
+### Étape 4 — Ouvrir dans Android Studio
+
+```
+File > Open > sélectionner le dossier MonProjet
+```
+
+La première sync Gradle télécharge les dépendances (~2-5 min). Une fois terminée :
+
+- **Android** : Run → sélectionner `androidApp` → choisir un émulateur ou device
+- **Desktop** : `./gradlew :desktopApp:run`
+- **Web** : `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
+- **iOS** : `open iosApp/iosApp.xcodeproj` puis Run dans Xcode
+
+L'application démarre avec login, dashboard, profil, notifications et paramètres fonctionnels.
+
+---
+
+### Étape 5 — Personnaliser le thème
+
+```kotlin
+// core/design_system/src/commonMain/.../theme/Color.kt
+val Primary   = Color(0xFF1565C0)   // couleur principale du projet
+val Secondary = Color(0xFFFF6F00)   // couleur secondaire
+```
+
+---
+
+### Étape 6 — Créer la première feature métier
+
+```bash
+./create-feature.sh commandes
+```
+
+Génère `feature/commandes/` avec domain, data, presentation et config Koin entièrement scaffoldés. Voir section [Ajouter une feature métier](#-ajouter-une-feature-métier).
 
 ---
 
 ## 🎯 Configurer les cibles plateforme
 
-Ouvre `gradle.properties` et active les plateformes dont tu as besoin :
+Les targets KMP sont contrôlées par `gradle.properties` — aucune modification de code nécessaire :
 
 ```properties
-# Cibles actives — true ou false
 kmp.target.android=true
 kmp.target.ios=true
 kmp.target.desktop=false
@@ -148,63 +372,6 @@ kmp.target.web=false
 | Mobile + Desktop | `android=true` `ios=true` `desktop=true` `web=false` |
 | Toutes plateformes | `android=true` `ios=true` `desktop=true` `web=true` |
 | Web + Desktop | `android=false` `ios=false` `desktop=true` `web=true` |
-
-> Aucune modification de code n'est nécessaire. Les convention plugins Gradle lisent ces flags et configurent automatiquement les targets KMP.
-
----
-
-## 🆕 Créer un nouveau projet
-
-### Étape 1 — Cloner le template
-
-```bash
-git clone https://github.com/ton-compte/kmp-template.git NomDuProjet
-cd NomDuProjet
-rm -rf .git
-git init
-```
-
-### Étape 2 — Renommer le projet
-
-```bash
-./rename-project.sh \
-  --package com.tonentreprise.tonapp \
-  --name TonApp \
-  --prefix Ton
-```
-
-Ce script remplace dans tous les fichiers `.kt`, `.kts`, `.xml`, `.swift`, `.xcconfig`, `.toml` :
-- Le package `empire.digiprem.kmptemplate` → `com.tonentreprise.tonapp`
-- Le nom `KmpTemplate` → `TonApp`
-- Le préfixe des composants UI `App` → `Ton` (ex: `AppButton` → `TonButton`)
-
-### Étape 3 — Configurer les cibles
-
-```properties
-# gradle.properties
-kmp.target.android=true
-kmp.target.ios=true
-kmp.target.desktop=false
-kmp.target.web=false
-```
-
-### Étape 4 — Brancher l'API
-
-```kotlin
-// core/data/networking/HttpConstants.kt
-const val BASE_URL = "https://api.tonprojet.com/"
-const val API_KEY  = BuildConfig.API_KEY   // via buildKonfig
-```
-
-### Étape 5 — Personnaliser le thème
-
-```kotlin
-// core/design_system/theme/Color.kt
-val Primary   = Color(0xFF1565C0)   // ta couleur principale
-val Secondary = Color(0xFFFF6F00)   // ta couleur secondaire
-```
-
-**C'est tout.** L'app est opérationnelle avec le login, le dashboard, le profil, les notifications et les paramètres.
 
 ---
 
