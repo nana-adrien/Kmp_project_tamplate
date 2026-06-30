@@ -2,6 +2,8 @@ package empire.digiprem.kmptemplate.server.settings.service
 
 import empire.digiprem.kmptemplate.contracts.settings.SettingsDto
 import empire.digiprem.kmptemplate.contracts.settings.UpdateSettingsRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateUpdateSettingsRequest
+import empire.digiprem.kmptemplate.server.common.util.orThrow
 import empire.digiprem.kmptemplate.server.settings.infra.entity.SettingsEntity
 import empire.digiprem.kmptemplate.server.settings.infra.repository.SettingsRepository
 import jakarta.transaction.Transactional
@@ -23,6 +25,7 @@ class SettingsService(
 
     @Transactional
     fun updateSettings(userId: String, request: UpdateSettingsRequest): SettingsDto {
+        validateUpdateSettingsRequest(request).orThrow()
         val uuid = UUID.fromString(userId)
         val existing = settingsRepository.findById(uuid).orElseGet {
             SettingsEntity(userId = uuid)

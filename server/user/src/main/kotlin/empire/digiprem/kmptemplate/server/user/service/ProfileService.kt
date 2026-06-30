@@ -5,6 +5,8 @@ import empire.digiprem.kmptemplate.server.user.infra.entity.ProfileEntity
 import empire.digiprem.kmptemplate.server.user.infra.repository.ProfileRepository
 import empire.digiprem.kmptemplate.contracts.profile.ProfileDto
 import empire.digiprem.kmptemplate.contracts.profile.UpdateProfileRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateUpdateProfileRequest
+import empire.digiprem.kmptemplate.server.common.util.orThrow
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -22,6 +24,7 @@ class ProfileService(
 
     @Transactional
     fun updateProfile(userId: String, request: UpdateProfileRequest): ProfileDto {
+        validateUpdateProfileRequest(request).orThrow()
         val uuid = UUID.fromString(userId)
         val existing = profileRepository.findById(uuid).orElseThrow { UserNotFoundException() }
         val updated = ProfileEntity(

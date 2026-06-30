@@ -1,5 +1,6 @@
 package empire.digiprem.kmptemplate.server.common.exception
 
+import empire.digiprem.kmptemplate.server.common.exception.ValidationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException
@@ -39,6 +40,12 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EmailNotVerifiedException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleEmailNotVerified(e: EmailNotVerifiedException) = errorBody("EMAIL_NOT_VERIFIED", e.message)
+
+    @ExceptionHandler(ValidationException::class)
+    fun handleKonformValidation(e: ValidationException): ResponseEntity<Map<String, Any>> =
+        ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            mapOf("code" to "VALIDATION_ERROR", "errors" to e.errors)
+        )
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(e: MethodArgumentNotValidException): ResponseEntity<Map<String, Any>> {

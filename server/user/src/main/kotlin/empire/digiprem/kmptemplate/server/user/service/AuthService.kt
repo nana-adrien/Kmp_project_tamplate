@@ -14,6 +14,11 @@ import empire.digiprem.kmptemplate.server.user.infra.repository.ProfileRepositor
 import empire.digiprem.kmptemplate.server.user.infra.repository.RefreshTokenRepository
 import empire.digiprem.kmptemplate.server.user.infra.repository.UserRepository
 import empire.digiprem.kmptemplate.contracts.auth.AuthResponse
+import empire.digiprem.kmptemplate.contracts.auth.LoginRequest
+import empire.digiprem.kmptemplate.contracts.auth.RegisterRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateLoginRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateRegisterRequest
+import empire.digiprem.kmptemplate.server.common.util.orThrow
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -34,6 +39,7 @@ class AuthService(
 
     @Transactional
     fun register(email: String, username: String, password: String): Unit {
+        validateRegisterRequest(RegisterRequest(email, username, password)).orThrow()
         val trimmedEmail = email.trim()
         val trimmedUsername = username.trim()
 
@@ -63,6 +69,7 @@ class AuthService(
     }
 
     fun login(email: String, password: String): AuthResponse {
+        validateLoginRequest(LoginRequest(email, password)).orThrow()
         val user = userRepository.findByEmail(email.trim())
             ?: throw InvalidCredentialsException()
 

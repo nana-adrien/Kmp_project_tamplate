@@ -1,8 +1,13 @@
 package empire.digiprem.kmptemplate.server.user.service
 
+import empire.digiprem.kmptemplate.contracts.auth.ForgotPasswordRequest
+import empire.digiprem.kmptemplate.contracts.auth.ResetPasswordRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateForgotPasswordRequest
+import empire.digiprem.kmptemplate.contracts.validation.validateResetPasswordRequest
 import empire.digiprem.kmptemplate.server.common.exception.InvalidTokenException
 import empire.digiprem.kmptemplate.server.common.exception.UserNotFoundException
 import empire.digiprem.kmptemplate.server.common.security.PasswordEncoder
+import empire.digiprem.kmptemplate.server.common.util.orThrow
 import empire.digiprem.kmptemplate.server.user.infra.entity.PasswordResetTokenEntity
 import empire.digiprem.kmptemplate.server.user.infra.entity.UserEntity
 import empire.digiprem.kmptemplate.server.user.infra.repository.PasswordResetTokenRepository
@@ -31,6 +36,7 @@ class PasswordResetService(
 
     @Transactional
     fun requestReset(email: String) {
+        validateForgotPasswordRequest(ForgotPasswordRequest(email)).orThrow()
         val user = userRepository.findByEmail(email.trim()) ?: return // silent — don't reveal if email exists
         val rawToken = UUID.randomUUID().toString()
         val hashed = hashToken(rawToken)
@@ -51,6 +57,7 @@ class PasswordResetService(
 
     @Transactional
     fun resetPassword(token: String, newPassword: String) {
+        validateResetPasswordRequest(ResetPasswordRequest(token, newPassword)).orThrow()
         val hashed = hashToken(token)
         val record = passwordResetTokenRepository.findByHashedToken(hashed)
             ?: throw InvalidTokenException("Password reset token is invalid or has already been used")
