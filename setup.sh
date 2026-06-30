@@ -54,18 +54,31 @@ TARGET_WEB=$(ask_yn "Web (WASM)?" "n" && echo "true" || echo "false")
 # ── 3. Backend ────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${YELLOW}▸ Backend${NC}"
-echo "  1) Ktor  — REST + WebSockets (custom backend)"
-echo "  2) Supabase — BaaS with native Realtime"
+echo "  1) Ktor only  — client calls your own external API"
+echo "  2) Ktor + Spring Boot Server — backend included in this repo (Supabase PostgreSQL)"
+echo "  3) Supabase — BaaS via supabase-kt SDK (direct client access)"
 read -r -p "$(echo -e "${BLUE}?${NC} Choice [1]: ")" BACKEND_CHOICE
 BACKEND_CHOICE="${BACKEND_CHOICE:-1}"
 
 BACKEND_TYPE="ktor"
 SUPABASE_URL=""
 SUPABASE_KEY=""
+SERVER_DB_URL=""
+SERVER_DB_USER="postgres"
+SERVER_DB_PASSWORD=""
+SERVER_JWT_SECRET=""
 
 if [[ "$BACKEND_CHOICE" == "2" ]]; then
+    BACKEND_TYPE="ktor-server"
+    echo ""
+    echo -e "${YELLOW}  ▸ Supabase PostgreSQL (used by the Spring Boot server via JDBC)${NC}"
+    SERVER_DB_URL=$(ask "Supabase DB URL" "jdbc:postgresql://db.xxxx.supabase.co:5432/postgres")
+    SERVER_DB_USER=$(ask "DB user" "postgres")
+    SERVER_DB_PASSWORD=$(ask "DB password")
+    SERVER_JWT_SECRET=$(ask "JWT secret (base64, min 32 chars)")
+elif [[ "$BACKEND_CHOICE" == "3" ]]; then
     BACKEND_TYPE="supabase"
-    SUPABASE_URL=$(ask "Supabase URL" "https://xyzxyz.supabase.co")
+    SUPABASE_URL=$(ask "Supabase project URL" "https://xyzxyz.supabase.co")
     SUPABASE_KEY=$(ask "Supabase Anon Key")
 fi
 
@@ -96,7 +109,7 @@ echo "  Android     : $TARGET_ANDROID"
 echo "  iOS         : $TARGET_IOS"
 echo "  Desktop     : $TARGET_DESKTOP"
 echo "  Web         : $TARGET_WEB"
-echo "  Backend     : $BACKEND_TYPE"
+echo "  Backend     : $BACKEND_TYPE$([ "$BACKEND_TYPE" = "ktor-server" ] && echo " (Spring Boot included)")"
 echo "  Push        : $PUSH_PROVIDER"
 echo ""
 read -r -p "$(echo -e "${BLUE}?${NC} Proceed? (Y/n): ")" CONFIRM
@@ -137,6 +150,15 @@ if [[ "$BACKEND_TYPE" == "supabase" ]]; then
         gradle.properties
 fi
 
+if [[ "$BACKEND_TYPE" == "ktor-server" ]]; then
+    sed -i '' \
+        -e "s|^server.supabase.db.url=.*|server.supabase.db.url=${SERVER_DB_URL}|" \
+        -e "s|^server.supabase.db.user=.*|server.supabase.db.user=${SERVER_DB_USER}|" \
+        -e "s|^server.supabase.db.password=.*|server.supabase.db.password=${SERVER_DB_PASSWORD}|" \
+        -e "s|^server.jwt.secret=.*|server.jwt.secret=${SERVER_JWT_SECRET}|" \
+        gradle.properties
+fi
+
 # 6d. Push notifications
 sed -i '' \
     -e "s/^push.provider=.*/push.provider=${PUSH_PROVIDER}/" \
@@ -157,7 +179,13 @@ if [[ "$PUSH_PROVIDER" == "firebase" ]]; then
     echo "  • Add GoogleService-Info.plist to iosApp/"
 fi
 
-echo "  • Set BASE_URL in core/data/src/commonMain/.../networking/HttpConstants.kt"
+if [[ "$BACKEND_TYPE" == "ktor-server" ]]; then
+    echo "  • Run the server: ./gradlew :server:app:bootRun"
+    echo "  • Set BASE_URL in core/data to http://localhost:8080"
+    echo "  • Apply DB migrations to your Supabase PostgreSQL instance"
+else
+    echo "  • Set BASE_URL in core/data/src/commonMain/.../networking/HttpConstants.kt"
+fi
 echo "  • Customize colors in core/design_system/src/.../theme/Color.kt"
 echo "  • Open the project in Android Studio and sync Gradle"
 echo "  • Run: ./gradlew :androidApp:assembleDebug"

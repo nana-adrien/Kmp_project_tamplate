@@ -39,6 +39,7 @@ val props = java.util.Properties().apply {
     load(file("gradle.properties").inputStream())
 }
 fun prop(key: String) = props.getProperty(key) == "true"
+fun strProp(key: String): String? = props.getProperty(key)
 
 // ── Platform app modules ──────────────────────────────────────────────────────
 include(":shared")              // main KMP module (always included)
@@ -46,6 +47,20 @@ include(":androidApp")          // thin Android wrapper
 include(":desktopApp")          // thin Desktop wrapper (conditional at build time)
 include(":webApp")              // thin Web/WASM wrapper (conditional at build time)
 // iosApp is always managed by Xcode — not included in Gradle
+
+// ── Shared contracts (DTOs shared between client and server) ──────────────────
+include(":shared-contracts")    // always included — used by client and by server if ktor-server
+
+// ── Server modules (included only when backend.type=ktor-server) ──────────────
+if (strProp("backend.type") == "ktor-server") {
+    include(
+        ":server:common",
+        ":server:user",
+        ":server:settings",
+        ":server:notifications",
+        ":server:app",
+    )
+}
 
 // ── Core modules ──────────────────────────────────────────────────────────────
 include(

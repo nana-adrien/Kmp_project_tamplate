@@ -56,5 +56,13 @@ gradlePlugin {
             id = "convention.app"
             implementationClass = "AppPlugin"
         }
+        register("springCommon") {
+            id = "convention.spring.common"
+            implementationClass = "SpringCommonPlugin"
+        }
+        register("springService") {
+            id = "convention.spring.service"
+            implementationClass = "SpringServicePlugin"
+        }
     }
 }
