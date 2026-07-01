@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:validate}
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: false
     properties:
       hibernate:
@@ -25,7 +25,7 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:dGhpcy1pcy1hLXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=}
     access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}
     refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}

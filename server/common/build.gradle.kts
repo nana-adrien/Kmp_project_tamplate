@@ -1,11 +1,11 @@
 plugins {
     id("convention.spring.service")
-    alias(libs.plugins.spring-dependency-management)
+    alias(libs.plugins.springDependencyManagement)
 }
 
 dependencies {
     implementation(project(":shared-contracts"))
-    implementation(libs.spring.boot.starter.security)
+    api(libs.spring.boot.starter.security)
     implementation(libs.jwt.api)
     runtimeOnly(libs.jwt.impl)
     runtimeOnly(libs.jwt.jackson)

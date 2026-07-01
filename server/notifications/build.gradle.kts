@@ -1,7 +1,7 @@
 plugins {
     id("convention.spring.service")
-    alias(libs.plugins.spring-dependency-management)
-    alias(libs.plugins.kotlin-jpa)
+    alias(libs.plugins.springDependencyManagement)
+    alias(libs.plugins.kotlinJpa)
 }
 
 dependencies {
