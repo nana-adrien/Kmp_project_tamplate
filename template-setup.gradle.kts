@@ -14,12 +14,9 @@ import java.util.Properties
 
 // ── Lecture de la configuration ──────────────────────────────────────
 
+val cfgFile = file("template.config.properties")
 val cfg = Properties().apply {
-    val cfgFile = file("template.config.properties")
-    require(cfgFile.exists()) {
-        "template.config.properties introuvable. Lance ce script depuis le plugin."
-    }
-    cfgFile.inputStream().use { load(it) }
+    if (cfgFile.exists()) cfgFile.inputStream().use { load(it) }
 }
 
 fun prop(key: String): String = cfg.getProperty(key) ?: ""
@@ -32,6 +29,9 @@ tasks.register("applyTemplateConfig") {
     description = "Configure le projet depuis template.config.properties"
 
     doLast {
+        require(cfgFile.exists()) {
+            "template.config.properties introuvable. Lance ce script depuis le plugin."
+        }
         println("\n🔧 Démarrage de la configuration du projet…")
         println("   App     : ${prop("app.name")}")
         println("   Package : ${prop("app.package")}")
