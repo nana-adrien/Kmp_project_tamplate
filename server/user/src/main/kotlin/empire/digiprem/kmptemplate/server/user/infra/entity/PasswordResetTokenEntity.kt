@@ -18,7 +18,7 @@ class PasswordResetTokenEntity(
     @Column(nullable = false)
     val userId: UUID,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val hashedToken: String,
 
     @Column(nullable = false)

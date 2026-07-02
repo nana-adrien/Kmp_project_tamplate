@@ -18,10 +18,10 @@ class NotificationEntity(
     @Column(nullable = false)
     val userId: UUID,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val title: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val body: String,
 
     val isRead: Boolean = false,

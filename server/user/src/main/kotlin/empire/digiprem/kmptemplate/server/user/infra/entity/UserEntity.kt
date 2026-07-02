@@ -15,13 +15,13 @@ class UserEntity(
     @GeneratedValue
     val id: UUID? = null,
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, columnDefinition = "text")
     val email: String,
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, columnDefinition = "text")
     val username: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val hashedPassword: String,
 
     val hasVerifiedEmail: Boolean = false,

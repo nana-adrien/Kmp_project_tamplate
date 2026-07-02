@@ -15,10 +15,10 @@ class EmailVerificationTokenEntity(
     @GeneratedValue
     val id: UUID? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val email: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     val token: String,
 
     @Column(nullable = false)
