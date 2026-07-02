@@ -24,6 +24,7 @@ class KmpLibraryPlugin : Plugin<Project> {
                 configureKotlinMultiplatform()
             }
             configureKotlin()
+            // Dépendances communes à TOUS les targets KMP
             dependencies {
                 commonMainImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
                 commonMainImplementation(libs.findLibrary("kermit").get())

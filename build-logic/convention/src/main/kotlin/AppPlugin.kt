@@ -1,6 +1,5 @@
 import convention.configureKotlin
 import convention.configureKotlinMultiplatform
-import extension.androidMainImplementation
 import extension.commonMainImplementation
 import extension.kmpTargets
 import extension.libs
@@ -8,7 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
-// Entry point for the shared KMP module — applies all Compose + Koin + Navigation deps
+// Entry point for the shared composeApp module — KMP + CMP + Koin + Navigation
 class AppPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -28,7 +27,11 @@ class AppPlugin : Plugin<Project> {
                 configureKotlinMultiplatform()
             }
             configureKotlin()
+            // Dépendances communes à TOUS les targets (KMP + CMP + navigation)
             dependencies {
+                commonMainImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
+                commonMainImplementation(libs.findLibrary("kermit").get())
+                "commonTestImplementation"(libs.findLibrary("kotlin-test").get())
                 commonMainImplementation(libs.findLibrary("compose-runtime").get())
                 commonMainImplementation(libs.findLibrary("compose-foundation").get())
                 commonMainImplementation(libs.findLibrary("compose-material3").get())
@@ -43,18 +46,9 @@ class AppPlugin : Plugin<Project> {
                 commonMainImplementation(libs.findLibrary("koin-compose").get())
                 commonMainImplementation(libs.findLibrary("koin-compose-viewmodel").get())
                 commonMainImplementation(libs.findLibrary("navigation-compose").get())
-                commonMainImplementation(libs.findLibrary("kotlinx-coroutines-core").get())
-                commonMainImplementation(libs.findLibrary("kermit").get())
-                "commonTestImplementation"(libs.findLibrary("kotlin-test").get())
-
+                // Dépendance propre au target Android
                 if (targets.android) {
-                    androidMainImplementation(libs.findLibrary("compose-uiToolingPreview").get())
-                }
-                if (targets.desktop) {
-                    "jvmMainImplementation"(libs.findLibrary("kotlinx-coroutinesSwing").get())
-                }
-                if (targets.web) {
-                    "jsMainImplementation"(libs.findLibrary("wrappers-browser").get())
+                    "androidMainImplementation"(libs.findLibrary("compose-uiToolingPreview").get())
                 }
             }
         }
