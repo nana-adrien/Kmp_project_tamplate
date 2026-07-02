@@ -1,0 +1,192 @@
+# =============================================================
+#  template-manifest.toml
+#  Source de vérité de la structure du template Kmp_project_tamplate
+#  Lu par kmp-template-plugin avant la génération d'un nouveau projet.
+#  Ce fichier est ignoré lors du clone (voir section [ignore]).
+# =============================================================
+
+manifest_version = "1"
+template_version = "1.0.0"
+template_repo    = "https://github.com/nana-adrien/Kmp_project_tamplate.git"
+default_branch   = "main"
+
+# ── Dossiers et fichiers toujours inclus ─────────────────────
+[always]
+dirs = [
+    "shared",
+    "shared-contracts",
+    "core",
+    "feature",
+    "build-logic",
+    "gradle",
+]
+files = [
+    "build.gradle.kts",
+    "settings.gradle.kts",
+    "gradle.properties",
+    "gradlew",
+    "gradlew.bat",
+    ".gitignore",
+    "gradle/libs.versions.toml",
+]
+
+# ── Cibles plateformes ───────────────────────────────────────
+[targets.android]
+dirs         = ["androidApp"]
+sourceSets   = ["androidMain", "androidUnitTest", "androidInstrumentedTest"]
+gradleTarget = "androidTarget"
+module       = ":androidApp"
+tomlAliases  = [
+    "agp",
+    "androidTools",
+    "android-compileSdk",
+    "android-minSdk",
+    "android-targetSdk",
+    "androidx-activity",
+    "androidx-appcompat",
+    "androidx-core",
+    "androidx-espresso",
+    "androidx-testExt",
+    "android-gradlePlugin",
+    "android-kotlin-multiplatform-library-gradelPlugin",
+    "android-tools-common",
+    "androidx-core-ktx",
+    "androidx-testExt-junit",
+    "androidx-espresso-core",
+    "androidx-appcompat",
+    "androidx-activity-compose",
+    "ktor-client-okhttp",
+    "koin-android",
+    "datastore-preferences",
+    "datastore",
+    "androidApplication",
+    "androidMultiplatformLibrary",
+]
+
+[targets.ios]
+dirs         = ["iosApp"]
+sourceSets   = ["iosMain", "iosTest"]
+gradleTarget = "iosX64|iosArm64|iosSimulatorArm64"
+module       = ""
+tomlAliases  = [
+    "ktor-client-darwin",
+]
+
+[targets.desktop]
+dirs         = ["desktopApp"]
+sourceSets   = ["jvmMain", "jvmTest"]
+gradleTarget = "jvm"
+module       = ":desktopApp"
+tomlAliases  = [
+    "kotlinx-coroutinesSwing",
+    "ktor-client-cio",
+]
+
+[targets.web]
+dirs         = ["webApp"]
+sourceSets   = ["wasmJsMain", "wasmJsTest", "jsMain", "jsTest"]
+gradleTarget = "wasmJs|js"
+module       = ":webApp"
+tomlAliases  = [
+    "kotlin-wrappers",
+    "wrappers-browser",
+    "ktor-client-js",
+]
+
+# ── Backends ─────────────────────────────────────────────────
+[backends.ktor]
+dirs        = []
+tomlAliases = []
+
+[backends.ktor-server]
+dirs = ["server"]
+tomlAliases = [
+    "spring-boot",
+    "spring-dependency-management",
+    "jwt",
+    "jakarta",
+    "jackson",
+    "spring-boot-starter-webmvc",
+    "spring-boot-starter-security",
+    "spring-boot-starter-data-jpa",
+    "spring-boot-starter-validation",
+    "spring-boot-starter-mail",
+    "spring-boot-starter-test",
+    "spring-boot-devtools",
+    "spring-boot-processor",
+    "spring-security-test",
+    "jwt-api",
+    "jwt-impl",
+    "jwt-jackson",
+    "jakarta-servlet-api",
+    "jackson-module-kotlin",
+    "jackson-datatype-jsr310",
+    "kotlin-reflect",
+    "postgresql",
+    "kotlin-allopen",
+    "kotlin-noarg",
+    "springBoot",
+    "springDependencyManagement",
+    "kotlinSpring",
+    "kotlinJpa",
+    "conventionSpringService",
+]
+modules = [
+    ":server:common",
+    ":server:user",
+    ":server:settings",
+    ":server:notifications",
+    ":server:app",
+]
+
+[backends.supabase]
+dirs = []
+tomlAliases = [
+    "supabase",
+    "supabase-auth",
+    "supabase-realtime",
+    "supabase-postgrest",
+    "buildkonfig",
+    "buildkonfig-gradlePlugin",
+    "buildkonfig-compiler",
+]
+
+# ── Push notifications ───────────────────────────────────────
+[push.none]
+dirs          = []
+tomlAliases   = []
+filesToDelete = [
+    "androidApp/google-services.json",
+    "iosApp/GoogleService-Info.plist",
+]
+
+[push.firebase]
+dirs        = []
+tomlAliases = [
+    "firebase",
+    "firebase-bom",
+    "firebase-messaging",
+]
+
+[push.apns]
+dirs        = []
+tomlAliases = []
+
+# ── Patterns à exclure du clone ──────────────────────────────
+[ignore]
+patterns = [
+    "build/",
+    ".gradle/",
+    ".idea/",
+    "*.iml",
+    "local.properties",
+    "google-services.json",
+    "GoogleService-Info.plist",
+    "template-manifest.toml",
+    ".template-initialized",
+    "setup.sh",
+    "rename-project.sh",
+    "create-feature.sh",
+    ".scripts/",
+    "kmp-setup.html",
+]
