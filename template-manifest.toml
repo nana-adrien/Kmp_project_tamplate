@@ -22,6 +22,7 @@ dirs = [
 ]
 files = [
     "build.gradle.kts",
+    "template-setup.gradle.kts",
     "settings.gradle.kts",
     "gradle.properties",
     "gradlew",
@@ -80,6 +81,7 @@ module       = ":desktopApp"
 tomlAliases  = [
     "kotlinx-coroutinesSwing",
     "ktor-client-cio",
+    "kotlinJvm"
 ]
 
 [targets.web]
@@ -129,6 +131,7 @@ tomlAliases = [
     "springDependencyManagement",
     "kotlinSpring",
     "kotlinJpa",
+    "kotlinJvm",
     "conventionSpringService",
 ]
 modules = [
