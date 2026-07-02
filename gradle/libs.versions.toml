@@ -34,6 +34,7 @@ konform = "0.11.0"
 
 # Spring Boot Server (activated if backend.type=ktor-server)
 spring-boot = "3.4.3"
+spring-swagger = "2.8.3"
 spring-dependency-management = "1.1.7"
 jwt = "0.12.6"
 jakarta = "6.1.0"
@@ -151,6 +152,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 spring-boot-devtools = { module = "org.springframework.boot:spring-boot-devtools" }
 spring-boot-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot" }
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
+spring-springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui" , version.ref = "spring-swagger"}
 jwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jwt" }
 jwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jwt" }
 jwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jwt" }

@@ -20,6 +20,10 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+  devtools:
+    restart:
+      enabled: false
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -29,3 +33,8 @@ app:
     access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}
     refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
+
+springdoc:
+  model-converters:
+    generic-models: empire.digiprem.models.ApiResponse

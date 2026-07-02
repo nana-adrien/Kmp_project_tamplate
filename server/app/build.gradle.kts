@@ -10,7 +10,9 @@ dependencies {
     implementation(project(":server:settings"))
     implementation(project(":server:notifications"))
     implementation(libs.spring.boot.starter.data.jpa)
+    //implementation(libs.spring.springdoc.openapi)
+
+    implementation(libs.spring.springdoc.openapi)
     runtimeOnly(libs.postgresql)
-    developmentOnly(libs.spring.boot.devtools)
     annotationProcessor(libs.spring.boot.processor)
 }
