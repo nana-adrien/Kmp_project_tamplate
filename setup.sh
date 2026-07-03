@@ -310,6 +310,35 @@ with open('settings.gradle.kts', 'w') as f:
 PYEOF
 echo "  ✅ settings.gradle.kts nettoyé"
 
+# 7e. Supprimer les fichiers convention plugins inutilisés
+PLUGIN_DIR="build-logic/convention/src/main/kotlin"
+
+if [[ "$BACKEND_TYPE" != "ktor-server" ]]; then
+    rm -f "$PLUGIN_DIR/SpringCommonPlugin.kt"
+    rm -f "$PLUGIN_DIR/SpringServicePlugin.kt"
+    rm -f "$PLUGIN_DIR/convention/SpringTargetServer.kt"
+fi
+
+if [[ "$TARGET_DESKTOP" != "true" ]]; then
+    rm -f "$PLUGIN_DIR/convention/DesktopTargetKmp.kt"
+fi
+
+if [[ "$TARGET_WEB" != "true" ]]; then
+    rm -f "$PLUGIN_DIR/convention/WebTargetKmp.kt"
+fi
+
+if [[ "$BACKEND_TYPE" != "supabase" ]]; then
+    rm -f "$PLUGIN_DIR/BuildConfigPlugin.kt"
+    sed -i '' '/alias.*conventionBuildConfig/d' core/data/build.gradle.kts
+fi
+echo "  ✅ Fichiers convention plugins inutilisés supprimés"
+
+# 7f. Retirer :shared-contracts de settings.gradle.kts si pas de serveur
+if [[ "$BACKEND_TYPE" != "ktor-server" ]]; then
+    sed -i '' '/include.*":shared-contracts"/d' settings.gradle.kts
+    echo "  ✅ :shared-contracts exclu (pas de serveur)"
+fi
+
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  ✅ Setup complete!${NC}"
