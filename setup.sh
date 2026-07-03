@@ -188,6 +188,128 @@ EOF
     echo "  ✅ local.properties créé"
 fi
 
+# 7. Cleanup template artifacts from generated project
+echo "  Cleaning up template artifacts..."
+
+# 7a. Resolve isTargetEnabled() blocks in core/config/build.gradle.kts
+python3 - <<'PYEOF'
+import re
+
+props = {}
+with open('gradle.properties') as f:
+    for line in f:
+        line = line.strip()
+        if '=' in line and not line.startswith('#'):
+            k, v = line.split('=', 1)
+            props[k.strip()] = v.strip()
+
+def is_enabled(key):
+    return props.get(key, 'false') == 'true'
+
+with open('core/config/build.gradle.kts') as f:
+    lines = f.read().split('\n')
+
+result = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    m = re.match(r'^(\s*)if \(isTargetEnabled\("([^"]+)"\)\) \{$', line)
+    if m:
+        key = m.group(2)
+        depth = 1
+        block_lines = []
+        i += 1
+        while i < len(lines):
+            l = lines[i]
+            depth += l.count('{') - l.count('}')
+            if depth == 0:
+                i += 1
+                break
+            block_lines.append(l)
+            i += 1
+        if is_enabled(key):
+            for bl in block_lines:
+                result.append(bl[4:] if bl.startswith('    ') else bl)
+        continue
+    elif re.match(r'^fun isTargetEnabled\(', line):
+        i += 1
+        continue
+    else:
+        result.append(line)
+    i += 1
+
+cleaned = re.sub(r'\n{3,}', '\n\n', '\n'.join(result))
+with open('core/config/build.gradle.kts', 'w') as f:
+    f.write(cleaned)
+PYEOF
+echo "  ✅ core/config/build.gradle.kts nettoyé"
+
+# 7b. Clean build-logic/convention/build.gradle.kts
+if [[ "$BACKEND_TYPE" != "ktor-server" ]]; then
+    sed -i '' '/\/\/ \[template:spring-only-start\]/,/\/\/ \[template:spring-only-end\]/d' build-logic/convention/build.gradle.kts
+fi
+if [[ "$BACKEND_TYPE" != "supabase" ]]; then
+    sed -i '' '/\/\/ \[template:supabase-only-start\]/,/\/\/ \[template:supabase-only-end\]/d' build-logic/convention/build.gradle.kts
+fi
+sed -i '' '/\/\/ \[template:/d' build-logic/convention/build.gradle.kts
+echo "  ✅ build-logic/convention/build.gradle.kts nettoyé"
+
+# 7c. Clean root build.gradle.kts
+if [[ "$BACKEND_TYPE" != "ktor-server" ]]; then
+    sed -i '' '/\[template:spring-only\]/d' build.gradle.kts
+else
+    sed -i '' 's/ *\/\/ \[template:spring-only\]//' build.gradle.kts
+fi
+echo "  ✅ build.gradle.kts nettoyé"
+
+# 7d. Resolve settings.gradle.kts backend block
+python3 - <<'PYEOF'
+import re
+
+props = {}
+with open('gradle.properties') as f:
+    for line in f:
+        line = line.strip()
+        if '=' in line and not line.startswith('#'):
+            k, v = line.split('=', 1)
+            props[k.strip()] = v.strip()
+
+backend_type = props.get('backend.type', 'ktor')
+
+with open('settings.gradle.kts') as f:
+    lines = f.read().split('\n')
+
+result = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    m = re.match(r'^if \(strProp\("backend\.type"\) == "ktor-server"\) \{$', line)
+    if m:
+        depth = 1
+        block_lines = []
+        i += 1
+        while i < len(lines):
+            l = lines[i]
+            depth += l.count('{') - l.count('}')
+            if depth == 0:
+                i += 1
+                break
+            block_lines.append(l)
+            i += 1
+        if backend_type == 'ktor-server':
+            for bl in block_lines:
+                result.append(bl[4:] if bl.startswith('    ') else bl)
+        continue
+    else:
+        result.append(line)
+    i += 1
+
+cleaned = re.sub(r'\n{3,}', '\n\n', '\n'.join(result))
+with open('settings.gradle.kts', 'w') as f:
+    f.write(cleaned)
+PYEOF
+echo "  ✅ settings.gradle.kts nettoyé"
+
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  ✅ Setup complete!${NC}"

@@ -8,14 +8,18 @@ group = "empire.digiprem.kmptemplate.buildlogic"
 
 dependencies {
     implementation(libs.room.gradlePlugin)
+    // [template:supabase-only-start]
     implementation(libs.buildkonfig.gradlePlugin)
     implementation(libs.buildkonfig.compiler)
+    // [template:supabase-only-end]
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.android.kotlin.multiplatform.library.gradelPlugin)
     compileOnly(libs.android.tools.common)
     compileOnly(libs.kotlin.gradlePlugin)
+    // [template:spring-only-start]
     implementation(libs.kotlin.allopen)
     implementation(libs.kotlin.noarg)
+    // [template:spring-only-end]
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
 }
@@ -60,6 +64,7 @@ gradlePlugin {
             id = "convention.app"
             implementationClass = "AppPlugin"
         }
+        // [template:spring-only-start]
         register("springCommon") {
             id = "convention.spring.common"
             implementationClass = "SpringCommonPlugin"
@@ -68,9 +73,12 @@ gradlePlugin {
             id = "convention.spring.service"
             implementationClass = "SpringServicePlugin"
         }
+        // [template:spring-only-end]
+        // [template:supabase-only-start]
         register("buildConfig") {
             id = "convention.build.config"
             implementationClass = "BuildConfigPlugin"
         }
+        // [template:supabase-only-end]
     }
 }
