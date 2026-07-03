@@ -40,16 +40,18 @@ tasks.register("applyTemplateConfig") {
         println("   Backend : ${prop("backend.type")}")
         println()
 
-        step("1/10 Suppression des dossiers inutiles")     { cleanupUnusedDirs() }
-        step("2/10 Nettoyage des build.gradle.kts")        { cleanModuleBuildFiles() }
-        step("3/10 Réécriture de settings.gradle.kts")    { rewriteSettings() }
-        step("4/10 Réécriture de build.gradle.kts racine"){ rewriteRootBuildGradle() }
-        step("5/10 Réécriture de build-logic")             { rewriteBuildLogicConvention() }
-        step("6/10 Réécriture de PathUtil.kt")             { rewritePathUtil() }
-        step("7/10 Nettoyage de libs.versions.toml")       { cleanToml() }
-        step("8/10 Renommage du package")                  { renamePackage() }
-        step("9/10 Renommage du préfixe UI")               { renamePrefix() }
-        step("10/10 Écriture des propriétés")              {
+        step("1/12 Suppression des dossiers inutiles")      { cleanupUnusedDirs() }
+        step("2/12 Nettoyage des build.gradle.kts")        { cleanModuleBuildFiles() }
+        step("3/12 Réécriture de settings.gradle.kts")    { rewriteSettings() }
+        step("4/12 Réécriture de build.gradle.kts racine"){ rewriteRootBuildGradle() }
+        step("5/12 Réécriture de build-logic")             { rewriteBuildLogicConvention() }
+        step("6/12 Réécriture de PathUtil.kt")             { rewritePathUtil() }
+        step("7/12 Résolution de core/config")             { resolveConfigBuildFile() }
+        step("8/12 Nettoyage des sources build-logic")     { cleanBuildLogicSources() }
+        step("9/12 Nettoyage de libs.versions.toml")       { cleanToml() }
+        step("10/12 Renommage du package")                 { renamePackage() }
+        step("11/12 Renommage du préfixe UI")              { renamePrefix() }
+        step("12/12 Écriture des propriétés")              {
             writeGradleProperties()
             writeLocalProperties()
             deleteTemplateFiles()
@@ -128,6 +130,7 @@ fun cleanupUnusedDirs() {
         orphan.deleteRecursively()
     }
 
+    if (prop("backend.type") != "ktor-server") deleteDir("shared-contracts")
     when (prop("backend.type")) {
         "ktor"        -> { deleteDir("server"); deleteDir("supabase") }
         "ktor-server" -> deleteDir("supabase")
@@ -300,7 +303,9 @@ fun rewriteRootBuildGradle() {
         }
         appendLine("    alias(libs.plugins.composeMultiplatform)        apply false")
         appendLine("    alias(libs.plugins.composeCompiler)             apply false")
-        appendLine("    alias(libs.plugins.kotlinJvm)                   apply false")
+        if (prop("backend.type") == "ktor-server") {
+            appendLine("    alias(libs.plugins.kotlinJvm)                   apply false")
+        }
         appendLine("    alias(libs.plugins.kotlinMultiplatform)         apply false")
         appendLine("    alias(libs.plugins.kotlinSerialization)         apply false")
         appendLine("    alias(libs.plugins.ksp)                         apply false")
@@ -508,13 +513,15 @@ fun cleanToml() {
         "jakarta-servlet-api", "jackson-module-kotlin", "jackson-datatype-jsr310",
         "kotlin-reflect", "postgresql",
         "kotlin-allopen", "kotlin-noarg",
+        "spring-swagger", "spring-springdoc-openapi", "konform",
         "springBoot", "springDependencyManagement", "kotlinSpring", "kotlinJpa",
         "conventionSpringService"
     )
 
     if (prop("backend.type") != "supabase") aliases += setOf(
         "supabase", "supabase-auth", "supabase-realtime", "supabase-postgrest",
-        "buildkonfig", "buildkonfig-gradlePlugin", "buildkonfig-compiler"
+        "buildkonfig", "buildkonfig-gradlePlugin", "buildkonfig-compiler",
+        "conventionBuildConfig"
     )
 
     if (prop("push.type") != "firebase") aliases += setOf(
@@ -572,7 +579,262 @@ fun rewriteToml(tomlFile: File, aliasesToRemove: Set<String>) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ÉTAPE 8 — Renommage du package
+// ÉTAPE 7 — Résolution de core/config/build.gradle.kts
+// ══════════════════════════════════════════════════════════════════════
+
+fun resolveConfigBuildFile() {
+    val f = file("core/config/build.gradle.kts")
+    if (!f.exists()) return
+    val content = buildString {
+        appendLine("plugins {")
+        appendLine("    alias(libs.plugins.conventionKmpLibrary)")
+        appendLine("}")
+        appendLine()
+        appendLine("kotlin {")
+        appendLine("    sourceSets {")
+        appendLine("        commonMain.dependencies {")
+        appendLine("            api(project(\":core:domain\"))")
+        appendLine("            api(project(\":core:data\"))")
+        appendLine("            implementation(libs.koin.core)")
+        appendLine("            implementation(libs.ktor.client.core)")
+        appendLine("            implementation(libs.kermit)")
+        appendLine("        }")
+        if (bool("target.android")) {
+            appendLine("        androidMain.dependencies {")
+            appendLine("            implementation(libs.koin.android)")
+            appendLine("            implementation(libs.ktor.client.okhttp)")
+            appendLine("        }")
+        }
+        if (bool("target.ios")) {
+            appendLine("        iosMain.dependencies {")
+            appendLine("            implementation(libs.ktor.client.darwin)")
+            appendLine("        }")
+        }
+        if (bool("target.desktop")) {
+            appendLine("        jvmMain.dependencies {")
+            appendLine("            implementation(libs.ktor.client.cio)")
+            appendLine("        }")
+        }
+        if (bool("target.web")) {
+            appendLine("        wasmJsMain.dependencies {")
+            appendLine("            implementation(libs.ktor.client.js)")
+            appendLine("        }")
+        }
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ÉTAPE 8 — Nettoyage des sources build-logic
+// ══════════════════════════════════════════════════════════════════════
+
+fun cleanBuildLogicSources() {
+    val pluginDir = "build-logic/convention/src/main/kotlin"
+
+    // Supprimer les fichiers plugin inutilisés selon la configuration
+    if (prop("backend.type") != "ktor-server") {
+        deleteFile("$pluginDir/SpringCommonPlugin.kt")
+        deleteFile("$pluginDir/SpringServicePlugin.kt")
+        deleteFile("$pluginDir/convention/SpringTargetServer.kt")
+    }
+    if (!bool("target.desktop")) deleteFile("$pluginDir/convention/DesktopTargetKmp.kt")
+    if (!bool("target.web"))     deleteFile("$pluginDir/convention/WebTargetKmp.kt")
+    if (prop("backend.type") != "supabase") deleteFile("$pluginDir/BuildConfigPlugin.kt")
+
+    // Retirer alias(libs.plugins.conventionBuildConfig) de core/data si pas supabase
+    if (prop("backend.type") != "supabase") {
+        val dataFile = file("core/data/build.gradle.kts")
+        if (dataFile.exists()) {
+            val cleaned = dataFile.readLines()
+                .filter { !it.trimStart().startsWith("alias(libs.plugins.conventionBuildConfig)") }
+                .joinToString("\n")
+            dataFile.writeText(cleaned)
+        }
+    }
+
+    // Réécrire les fichiers convention plugin — supprimer les blocs if (targets.X) morts
+    rewriteKotlinMultiplatformKt(pluginDir)
+    rewriteKmpLibraryPluginKt(pluginDir)
+    rewriteAppPluginKt(pluginDir)
+    rewriteCmpLibraryPluginKt(pluginDir)
+}
+
+fun rewriteKotlinMultiplatformKt(pluginDir: String) {
+    val f = file("$pluginDir/convention/KotlinMultiplatform.kt")
+    if (!f.exists()) return
+    val content = buildString {
+        appendLine("package convention")
+        appendLine()
+        appendLine("import org.gradle.api.Project")
+        appendLine("import org.gradle.kotlin.dsl.configure")
+        appendLine("import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension")
+        if (bool("target.ios")) appendLine("import extension.pathToFrameworkName")
+        appendLine()
+        appendLine("internal fun Project.configureKotlinMultiplatform() {")
+        if (bool("target.android")) appendLine("    configureAndroidTarget()")
+        if (bool("target.ios"))     appendLine("    configureIosTarget(baseName = pathToFrameworkName())")
+        if (bool("target.desktop")) appendLine("    configureDesktopTarget()")
+        if (bool("target.web"))     appendLine("    configureWebTarget()")
+        appendLine()
+        appendLine("    extensions.configure<KotlinMultiplatformExtension> {")
+        appendLine("        compilerOptions {")
+        appendLine("            freeCompilerArgs.add(\"-Xexpect-actual-classes\")")
+        appendLine("            freeCompilerArgs.add(\"-opt-in=kotlin.RequiresOptIn\")")
+        appendLine("        }")
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
+}
+
+fun rewriteKmpLibraryPluginKt(pluginDir: String) {
+    val f = file("$pluginDir/KmpLibraryPlugin.kt")
+    if (!f.exists()) return
+    val android = bool("target.android")
+    val content = buildString {
+        appendLine("import convention.configureKotlin")
+        appendLine("import convention.configureKotlinMultiplatform")
+        appendLine("import extension.commonMainImplementation")
+        appendLine("import extension.libs")
+        appendLine("import org.gradle.api.Plugin")
+        appendLine("import org.gradle.api.Project")
+        appendLine("import org.gradle.kotlin.dsl.dependencies")
+        appendLine()
+        appendLine("class KmpLibraryPlugin : Plugin<Project> {")
+        appendLine("    override fun apply(target: Project) {")
+        appendLine("        with(target) {")
+        appendLine("            with(pluginManager) {")
+        if (android) appendLine("                apply(\"com.android.kotlin.multiplatform.library\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.multiplatform\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.plugin.serialization\")")
+        appendLine("            }")
+        if (android) {
+            appendLine("            plugins.withId(\"com.android.kotlin.multiplatform.library\") {")
+            appendLine("                configureKotlinMultiplatform()")
+            appendLine("            }")
+        } else {
+            appendLine("            configureKotlinMultiplatform()")
+        }
+        appendLine("            configureKotlin()")
+        appendLine("            dependencies {")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"kotlinx-coroutines-core\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"kermit\").get())")
+        appendLine("                \"commonTestImplementation\"(libs.findLibrary(\"kotlin-test\").get())")
+        appendLine("            }")
+        appendLine("        }")
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
+}
+
+fun rewriteAppPluginKt(pluginDir: String) {
+    val f = file("$pluginDir/AppPlugin.kt")
+    if (!f.exists()) return
+    val android = bool("target.android")
+    val content = buildString {
+        appendLine("import convention.configureKotlin")
+        appendLine("import convention.configureKotlinMultiplatform")
+        appendLine("import extension.commonMainImplementation")
+        appendLine("import extension.libs")
+        appendLine("import org.gradle.api.Plugin")
+        appendLine("import org.gradle.api.Project")
+        appendLine("import org.gradle.kotlin.dsl.dependencies")
+        appendLine()
+        appendLine("// Entry point for the shared composeApp module — KMP + CMP + Koin + Navigation")
+        appendLine("class AppPlugin : Plugin<Project> {")
+        appendLine("    override fun apply(target: Project) {")
+        appendLine("        with(target) {")
+        appendLine("            with(pluginManager) {")
+        if (android) appendLine("                apply(\"com.android.kotlin.multiplatform.library\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.multiplatform\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.plugin.serialization\")")
+        appendLine("                apply(\"org.jetbrains.compose\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.plugin.compose\")")
+        appendLine("            }")
+        if (android) {
+            appendLine("            plugins.withId(\"com.android.kotlin.multiplatform.library\") {")
+            appendLine("                configureKotlinMultiplatform()")
+            appendLine("            }")
+        } else {
+            appendLine("            configureKotlinMultiplatform()")
+        }
+        appendLine("            configureKotlin()")
+        appendLine("            dependencies {")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"kotlinx-coroutines-core\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"kermit\").get())")
+        appendLine("                \"commonTestImplementation\"(libs.findLibrary(\"kotlin-test\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-runtime\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-foundation\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-material3\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-ui\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-components-resources\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-uiToolingPreview\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"androidx-lifecycle-viewmodelCompose\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"androidx-lifecycle-runtimeCompose\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-materialIconsCore\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-materialIconsExtended\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"koin-core\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"koin-compose\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"koin-compose-viewmodel\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"navigation-compose\").get())")
+        if (android) {
+            appendLine("                \"androidMainImplementation\"(libs.findLibrary(\"compose-uiToolingPreview\").get())")
+        }
+        appendLine("            }")
+        appendLine("        }")
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
+}
+
+fun rewriteCmpLibraryPluginKt(pluginDir: String) {
+    val f = file("$pluginDir/CmpLibraryPlugin.kt")
+    if (!f.exists()) return
+    val android = bool("target.android")
+    val content = buildString {
+        appendLine("import extension.commonMainApi")
+        appendLine("import extension.commonMainImplementation")
+        appendLine("import extension.libs")
+        appendLine("import org.gradle.api.Plugin")
+        appendLine("import org.gradle.api.Project")
+        appendLine("import org.gradle.kotlin.dsl.dependencies")
+        appendLine()
+        appendLine("class CmpLibraryPlugin : Plugin<Project> {")
+        appendLine("    override fun apply(target: Project) {")
+        appendLine("        with(target) {")
+        appendLine("            with(pluginManager) {")
+        appendLine("                apply(\"convention.kmp.library\")")
+        appendLine("                apply(\"org.jetbrains.kotlin.plugin.compose\")")
+        appendLine("                apply(\"org.jetbrains.compose\")")
+        appendLine("            }")
+        appendLine("            dependencies {")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-runtime\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-foundation\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-material3\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-ui\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-components-resources\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-uiToolingPreview\").get())")
+        appendLine("                commonMainApi(libs.findLibrary(\"androidx-lifecycle-viewmodelCompose\").get())")
+        appendLine("                commonMainApi(libs.findLibrary(\"androidx-lifecycle-runtimeCompose\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-materialIconsCore\").get())")
+        appendLine("                commonMainImplementation(libs.findLibrary(\"compose-materialIconsExtended\").get())")
+        if (android) {
+            appendLine("                \"androidMainImplementation\"(libs.findLibrary(\"compose-uiToolingPreview\").get())")
+        }
+        appendLine("            }")
+        appendLine("        }")
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ÉTAPE 10 — Renommage du package
 // ══════════════════════════════════════════════════════════════════════
 
 fun renamePackage() {
@@ -622,7 +884,7 @@ fun cleanEmptyDirs(dir: File) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ÉTAPE 9 — Renommage du préfixe UI
+// ÉTAPE 11 — Renommage du préfixe UI
 // ══════════════════════════════════════════════════════════════════════
 
 fun renamePrefix() {
@@ -652,7 +914,7 @@ fun renamePrefix() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ÉTAPE 10 — Écriture des propriétés & suppression des fichiers template
+// ÉTAPE 12 — Écriture des propriétés & suppression des fichiers template
 // ══════════════════════════════════════════════════════════════════════
 
 fun writeGradleProperties() {
