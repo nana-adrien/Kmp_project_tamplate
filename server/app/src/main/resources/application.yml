@@ -36,5 +36,5 @@ app:
 
 
 springdoc:
-  model-converters:
-    generic-models: empire.digiprem.models.ApiResponse
+  swagger-ui:
+    path: /swagger-ui.html

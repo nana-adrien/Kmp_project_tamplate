@@ -18,8 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
+//@Tag(name = "accounts")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth", name = "Auth")
 class AuthController(
     private val authService: AuthService,
     private val emailVerificationService: EmailVerificationService,

@@ -11,17 +11,17 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/settings")
+@RequestMapping("/api/v1/settings", name = "Settings")
 class SettingsController(
     private val settingsService: SettingsService,
 ) {
 
-    @GetMapping("/")
+    @GetMapping("/get")
     fun getSettings(): SettingsDto {
         return settingsService.getSettings(currentUserId())
     }
 
-    @PutMapping("/")
+    @PutMapping("/update")
     fun updateSettings(@RequestBody request: UpdateSettingsRequest): SettingsDto {
         return settingsService.updateSettings(currentUserId(), request)
     }

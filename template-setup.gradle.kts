@@ -495,9 +495,9 @@ fun cleanToml() {
 
     if (!bool("target.ios"))     aliases += setOf("ktor-client-darwin")
 
-    if (!bool("target.desktop")) aliases += setOf(
-        "kotlinx-coroutinesSwing", "ktor-client-cio", "kotlinJvm"
-    )
+    if (!bool("target.desktop")) aliases += setOf("kotlinx-coroutinesSwing", "ktor-client-cio")
+    // kotlinJvm is also needed by the Spring Boot server — only remove if neither desktop nor ktor-server
+    if (!bool("target.desktop") && prop("backend.type") != "ktor-server") aliases += "kotlinJvm"
 
     if (!bool("target.web"))     aliases += setOf(
         "kotlin-wrappers", "wrappers-browser", "ktor-client-js"
@@ -659,6 +659,36 @@ fun cleanBuildLogicSources() {
     rewriteKmpLibraryPluginKt(pluginDir)
     rewriteAppPluginKt(pluginDir)
     rewriteCmpLibraryPluginKt(pluginDir)
+
+    // Réécrire shared-contracts si présent (backend = ktor-server)
+    rewriteSharedContractsBuildFile()
+}
+
+fun rewriteSharedContractsBuildFile() {
+    val f = file("shared-contracts/build.gradle.kts")
+    if (!f.exists()) return  // uniquement présent quand backend = ktor-server
+
+    val content = buildString {
+        appendLine("plugins {")
+        appendLine("    alias(libs.plugins.conventionKmpLibrary)")
+        appendLine("}")
+        appendLine()
+        appendLine("kotlin {")
+        if (!bool("target.desktop")) {
+            // Convention plugin n'ajoute jvm() que si desktop est activé.
+            // On l'ajoute explicitement ici pour que Spring Boot puisse consommer les DTOs.
+            appendLine("    jvm()")
+            appendLine()
+        }
+        appendLine("    sourceSets {")
+        appendLine("        commonMain.dependencies {")
+        appendLine("            implementation(libs.kotlinx.serialization.json)")
+        appendLine("            api(libs.konform)")
+        appendLine("        }")
+        appendLine("    }")
+        append("}")
+    }
+    f.writeText(content)
 }
 
 fun rewriteKotlinMultiplatformKt(pluginDir: String) {

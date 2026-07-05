@@ -11,14 +11,12 @@ dependencies {
 
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
-
     implementation(libs.compose.uiToolingPreview)
 }
 
 compose.desktop {
     application {
         mainClass = "empire.digiprem.kmp_project_tamplate.MainKt"
-
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "empire.digiprem.kmp_project_tamplate"

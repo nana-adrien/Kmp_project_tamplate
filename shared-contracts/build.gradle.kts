@@ -3,8 +3,6 @@ plugins {
 }
 
 kotlin {
-    // JVM is always included so Spring Boot server can consume these DTOs
-    jvm()
 
     sourceSets {
         commonMain.dependencies {

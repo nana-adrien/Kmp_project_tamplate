@@ -8,9 +8,9 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 internal fun Project.configureDesktopTarget() {
     extensions.configure<KotlinMultiplatformExtension> {
-        jvm(name = "desktop")
+        jvm()
     }
     dependencies {
-        "desktopMainImplementation"(libs.findLibrary("kotlinx-coroutinesSwing").get())
+        "jvmMainImplementation"(libs.findLibrary("kotlinx-coroutinesSwing").get())
     }
 }

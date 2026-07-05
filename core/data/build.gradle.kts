@@ -16,10 +16,11 @@ kotlin {
             api(libs.ktor.client.auth)
             api(libs.ktor.client.websockets)
             // DataStore — api so core:config can access DataStore types
-            api(libs.datastore.preferences)
-            api(libs.datastore.core)
+            api(libs.bundles.dataStore.common)
         }
+
         androidMain.dependencies {
+            api(libs.bundles.dataStore.android)
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {

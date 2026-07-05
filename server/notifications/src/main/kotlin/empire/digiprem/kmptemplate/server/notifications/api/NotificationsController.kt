@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/v1/notifications", name = "Notifications")
 class NotificationsController(
     private val notificationsService: NotificationsService,
 ) {
 
-    @GetMapping("/")
+    @GetMapping("/get")
     fun getNotifications(): List<NotificationDto> {
         return notificationsService.getNotifications(currentUserId())
     }

@@ -8,7 +8,11 @@ kotlin {
             implementation(project(":core:domain"))
             api(project(":core:data"))
             implementation(project(":feature:settings:domain"))
-            implementation(libs.datastore.preferences)
+            implementation(libs.bundles.dataStore.common)
+        }
+
+        androidMain.dependencies {
+            implementation(libs.bundles.dataStore.android)
         }
     }
 }
