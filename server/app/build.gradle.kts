@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.springDependencyManagement)
 }
 
+springBoot {
+    mainClass.set("empire.digiprem.kmptemplate.server.app.ServerApplicationKt")
+}
+
 dependencies {
     implementation(project(":server:common"))
     implementation(project(":server:user"))
